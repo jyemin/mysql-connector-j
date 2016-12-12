@@ -1301,7 +1301,7 @@ public class ConnectionPropertiesImpl implements Serializable, ConnectionPropert
             Messages.getString("ConnectionProperties.disabledAuthenticationPlugins"), "5.1.19", CONNECTION_AND_AUTH_CATEGORY, Integer.MIN_VALUE);
 
     private StringConnectionProperty defaultAuthenticationPlugin = new StringConnectionProperty("defaultAuthenticationPlugin",
-            "com.mysql.jdbc.authentication.MysqlNativePasswordPlugin", Messages.getString("ConnectionProperties.defaultAuthenticationPlugin"), "5.1.19",
+            "com.mongodb.jdbc.authentication.MongoSqlAuthenticationPlugin", Messages.getString("ConnectionProperties.defaultAuthenticationPlugin"), "5.1.19",
             CONNECTION_AND_AUTH_CATEGORY, Integer.MIN_VALUE);
 
     private BooleanConnectionProperty disconnectOnExpiredPasswords = new BooleanConnectionProperty("disconnectOnExpiredPasswords", true,

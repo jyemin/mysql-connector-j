@@ -54,9 +54,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.zip.Deflater;
 
+import com.mongodb.jdbc.authentication.MongoSqlAuthenticationPlugin;
 import com.mysql.jdbc.authentication.MysqlClearPasswordPlugin;
 import com.mysql.jdbc.authentication.MysqlNativePasswordPlugin;
-import com.mysql.jdbc.authentication.MysqlOldPasswordPlugin;
 import com.mysql.jdbc.authentication.Sha256PasswordPlugin;
 import com.mysql.jdbc.exceptions.MySQLStatementCancelledException;
 import com.mysql.jdbc.exceptions.MySQLTimeoutException;
@@ -1446,23 +1446,11 @@ public class MysqlIO {
         this.authenticationPlugins = new HashMap<String, AuthenticationPlugin>();
 
         // embedded plugins
-        AuthenticationPlugin plugin = new MysqlOldPasswordPlugin();
+        AuthenticationPlugin plugin = new MongoSqlAuthenticationPlugin();
         plugin.init(this.connection, this.connection.getProperties());
         boolean defaultIsFound = addAuthenticationPlugin(plugin);
 
-        plugin = new MysqlNativePasswordPlugin();
-        plugin.init(this.connection, this.connection.getProperties());
-        if (addAuthenticationPlugin(plugin)) {
-            defaultIsFound = true;
-        }
-
         plugin = new MysqlClearPasswordPlugin();
-        plugin.init(this.connection, this.connection.getProperties());
-        if (addAuthenticationPlugin(plugin)) {
-            defaultIsFound = true;
-        }
-
-        plugin = new Sha256PasswordPlugin();
         plugin.init(this.connection, this.connection.getProperties());
         if (addAuthenticationPlugin(plugin)) {
             defaultIsFound = true;
@@ -1675,22 +1663,13 @@ public class MysqlIO {
                          * Use default if there is no plugin for pluginName.
                          */
                         plugin = getAuthenticationPlugin(this.clientDefaultAuthenticationPluginName);
-                    } else if (pluginName.equals(Sha256PasswordPlugin.PLUGIN_NAME) && !isSSLEstablished() && this.connection.getServerRSAPublicKeyFile() == null
-                            && !this.connection.getAllowPublicKeyRetrieval()) {
-                        /*
-                         * Fall back to default if plugin is 'sha256_password' but required conditions for this to work aren't met. If default is other than
-                         * 'sha256_password' this will result in an immediate authentication switch request, allowing for other plugins to authenticate
-                         * successfully. If default is 'sha256_password' then the authentication will fail as expected. In both cases user's password won't be
-                         * sent to avoid subjecting it to lesser security levels.
-                         */
-                        plugin = getAuthenticationPlugin(this.clientDefaultAuthenticationPluginName);
-                        skipPassword = !this.clientDefaultAuthenticationPluginName.equals(pluginName);
+                    } else {
+                        fromServer = new Buffer(StringUtils.getBytes(this.seed));
                     }
 
                     this.serverDefaultAuthenticationPluginName = plugin.getProtocolPluginName();
 
                     checkConfidentiality(plugin);
-                    fromServer = new Buffer(StringUtils.getBytes(this.seed));
                 } else {
                     // no challenge so this is a changeUser call
                     plugin = getAuthenticationPlugin(this.serverDefaultAuthenticationPluginName == null ? this.clientDefaultAuthenticationPluginName
